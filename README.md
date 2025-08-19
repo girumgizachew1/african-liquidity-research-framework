@@ -86,12 +86,3 @@ The framework generates comprehensive research reports including:
 - Research insights and conclusions
 - JSON export for further analysis
 
-## 💡 For LAVA Application
-
-This framework demonstrates:
-- **Methodological rigor** in analyzing African markets
-- **Technical implementation** of research questions
-- **Actionable insights** for investment decisions
-- **Scalable analysis** for portfolio companies
-
-The framework can be applied to real market data to generate the research findings needed for LAVA's investment theses and portfolio company support.
