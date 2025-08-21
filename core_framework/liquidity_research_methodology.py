@@ -73,37 +73,94 @@ class AfricanLiquidityResearchFramework:
     
     def _validate_market_data(self, data: Dict) -> None:
         """Validate that market data contains required fields for analysis."""
-        required_fields = {
-            "basic": ["market_name", "country", "region"],
-            "liquidity_sourcing": ["liquidity_sources", "liquidity_volumes"],
-            "efficiency": ["transaction_metrics", "float_metrics", "agent_network_metrics"],
-            "onchain": ["blockchain_metrics", "defi_integration", "cross_chain_efficiency"]
-        }
+        # Check if data has the new providers structure
+        if "providers" in data:
+            logger.info("Detected new providers array structure - validating onchain/offchain data")
+            providers = data["providers"]
+            
+            for provider in providers:
+                provider_name = provider.get("name", "Unknown")
+                provider_type = provider.get("type", "unknown")
+                metrics = provider.get("metrics", {})
+                
+                logger.info(f"Validating {provider_type} provider: {provider_name}")
+                
+                if provider_type == "offchain":
+                    # Validate traditional metrics
+                    required_offchain_fields = ["market_name", "country", "region", "liquidity_sources", "liquidity_volumes"]
+                    for field in required_offchain_fields:
+                        if field not in metrics:
+                            logger.warning(f"Missing offchain field '{field}' for provider {provider_name}")
+                
+                elif provider_type == "onchain":
+                    # Validate onchain metrics
+                    required_onchain_fields = ["tvl_usd", "daily_volume_usd", "apy_avg", "cross_chain_transfers", "source"]
+                    for field in required_onchain_fields:
+                        if field not in metrics:
+                            logger.warning(f"Missing onchain field '{field}' for provider {provider_name}")
+                    
+                    # Check for optional blockchain metrics
+                    if "blockchain_metrics" not in metrics:
+                        logger.info(f"No detailed blockchain metrics for {provider_name} - will use basic onchain data")
+                    if "defi_integration" not in metrics:
+                        logger.info(f"No DeFi integration data for {provider_name} - will use basic onchain data")
+                
+                else:
+                    logger.warning(f"Unknown provider type '{provider_type}' for {provider_name}")
         
-        for market_key, market_data in data.items():
-            logger.info(f"Validating data for market: {market_data.get('market_name', market_key)}")
+        else:
+            # Fallback to old structure validation
+            logger.info("Using legacy data structure validation")
+            required_fields = {
+                "basic": ["market_name", "country", "region"],
+                "liquidity_sourcing": ["liquidity_sources", "liquidity_volumes"],
+                "efficiency": ["transaction_metrics", "float_metrics", "agent_network_metrics"],
+                "onchain": ["blockchain_metrics", "defi_integration", "cross_chain_efficiency"]
+            }
             
-            for field in required_fields["basic"]:
-                if field not in market_data:
-                    logger.warning(f"Missing basic field '{field}' for market {market_key}")
-            
-            if "liquidity_sources" not in market_data:
-                logger.warning(f"Missing liquidity_sources for market {market_key}")
-            if "liquidity_volumes" not in market_data:
-                logger.warning(f"Missing liquidity_volumes for market {market_key}")
-            
-            if "transaction_metrics" not in market_data:
-                logger.warning(f"Missing transaction_metrics for market {market_key}")
-            if "float_metrics" not in market_data:
-                logger.warning(f"Missing float_metrics for market {market_key}")
-            if "agent_network_metrics" not in market_data:
-                logger.warning(f"Missing agent_network_metrics for market {market_key}")
-            
-            # Check for onchain data (optional but recommended)
-            if "blockchain_metrics" not in market_data:
-                logger.info(f"No blockchain metrics for market {market_key} - will use traditional analysis")
-            if "defi_integration" not in market_data:
-                logger.info(f"No DeFi integration data for market {market_key} - will use traditional analysis")
+            for market_key, market_data in data.items():
+                logger.info(f"Validating data for market: {market_data.get('market_name', market_key)}")
+                
+                for field in required_fields["basic"]:
+                    if field not in market_data:
+                        logger.warning(f"Missing basic field '{field}' for market {market_key}")
+                
+                if "liquidity_sources" not in market_data:
+                    logger.warning(f"Missing liquidity_sources for market {market_key}")
+                if "liquidity_volumes" not in market_data:
+                    logger.warning(f"Missing liquidity_volumes for market {market_key}")
+                
+                if "transaction_metrics" not in market_data:
+                    logger.warning(f"Missing transaction_metrics for market {market_key}")
+                if "float_metrics" not in market_data:
+                    logger.warning(f"Missing float_metrics for market {market_key}")
+                if "agent_network_metrics" not in market_data:
+                    logger.warning(f"Missing agent_network_metrics for market {market_key}")
+                
+                # Check for onchain data (optional but recommended)
+                if "blockchain_metrics" not in market_data:
+                    logger.info(f"No blockchain metrics for market {market_key} - will use traditional analysis")
+                if "defi_integration" not in market_data:
+                    logger.info(f"No DeFi integration data for market {market_key} - will use traditional analysis")
+    
+    def _get_providers_data(self, data: Dict) -> List[Dict]:
+        """Extract providers data from either new or legacy structure."""
+        if "providers" in data:
+            return data["providers"]
+        else:
+            # Convert legacy structure to providers format
+            providers = []
+            for market_key, market_data in data.items():
+                provider_type = "offchain"  # Legacy data is assumed to be offchain
+                if "blockchain_metrics" in market_data or "defi_integration" in market_data:
+                    provider_type = "hybrid"  # Has both traditional and blockchain data
+                
+                providers.append({
+                    "name": market_data.get("market_name", market_key),
+                    "type": provider_type,
+                    "metrics": market_data
+                })
+            return providers
     
     def analyze_liquidity_sourcing(self, market_data: Dict) -> Dict:
         """
@@ -122,54 +179,111 @@ class AfricanLiquidityResearchFramework:
             "analysis_timestamp": self.research_timestamp.isoformat(),
             "methodology": "Source identification and volume analysis by market and region",
             "findings": {},
-            "regional_patterns": {}
+            "regional_patterns": {},
+            "onchain_offchain_comparison": {}
         }
         
-        for market_key, market_data in market_data.items():
-            market_name = market_data.get("market_name", market_key)
-            region = market_data.get("region", "Unknown")
-            
-            liquidity_sources = market_data.get("liquidity_sources", [])
-            liquidity_volumes = market_data.get("liquidity_volumes", {})
-            
-            if liquidity_sources and liquidity_volumes:
-                total_volume = sum(liquidity_volumes.values())
-                source_distribution = {
-                    source: {
-                        "volume": volume,
-                        "percentage": (volume / total_volume * 100) if total_volume > 0 else 0
-                    }
-                    for source, volume in liquidity_volumes.items()
-                }
-                
-                primary_source = max(source_distribution.items(), key=lambda x: x[1]["volume"])[0]
-                
-                sourcing_analysis["findings"][market_key] = {
-                    "market_name": market_name,
-                    "region": region,
-                    "liquidity_sources": liquidity_sources,
-                    "source_distribution": source_distribution,
-                    "primary_source": primary_source,
-                    "total_liquidity_volume": total_volume
-                }
-                
-                if region not in sourcing_analysis["regional_patterns"]:
-                    sourcing_analysis["regional_patterns"][region] = {
-                        "markets": [],
-                        "common_sources": set(),
-                        "total_volume": 0
-                    }
-                
-                sourcing_analysis["regional_patterns"][region]["markets"].append(market_key)
-                sourcing_analysis["regional_patterns"][region]["common_sources"].update(liquidity_sources)
-                sourcing_analysis["regional_patterns"][region]["total_volume"] += total_volume
+        providers = self._get_providers_data(market_data)
         
+        for provider in providers:
+            provider_name = provider.get("name", "Unknown")
+            provider_type = provider.get("type", "unknown")
+            metrics = provider.get("metrics", {})
+            
+            if provider_type == "offchain":
+                # Traditional liquidity sourcing analysis
+                region = metrics.get("region", "Unknown")
+                liquidity_sources = metrics.get("liquidity_sources", [])
+                liquidity_volumes = metrics.get("liquidity_volumes", {})
+                
+                if liquidity_sources and liquidity_volumes:
+                    total_volume = sum(liquidity_volumes.values())
+                    source_distribution = {
+                        source: {
+                            "volume": volume,
+                            "percentage": (volume / total_volume * 100) if total_volume > 0 else 0
+                        }
+                        for source, volume in liquidity_volumes.items()
+                    }
+                    
+                    primary_source = max(source_distribution.items(), key=lambda x: x[1]["volume"])[0]
+                    
+                    sourcing_analysis["findings"][provider_name] = {
+                        "provider_type": provider_type,
+                        "market_name": provider_name,
+                        "region": region,
+                        "liquidity_sources": liquidity_sources,
+                        "source_distribution": source_distribution,
+                        "primary_source": primary_source,
+                        "total_liquidity_volume": total_volume
+                    }
+                    
+                    if region not in sourcing_analysis["regional_patterns"]:
+                        sourcing_analysis["regional_patterns"][region] = {
+                            "markets": [],
+                            "common_sources": set(),
+                            "total_volume": 0
+                        }
+                    
+                    sourcing_analysis["regional_patterns"][region]["markets"].append(provider_name)
+                    sourcing_analysis["regional_patterns"][region]["common_sources"].update(liquidity_sources)
+                    sourcing_analysis["regional_patterns"][region]["total_volume"] += total_volume
+            
+            elif provider_type == "onchain":
+                # Onchain liquidity sourcing analysis
+                tvl_usd = metrics.get("tvl_usd", 0)
+                daily_volume_usd = metrics.get("daily_volume_usd", 0)
+                source = metrics.get("source", "Unknown")
+                
+                sourcing_analysis["findings"][provider_name] = {
+                    "provider_type": provider_type,
+                    "market_name": provider_name,
+                    "region": "Blockchain Network",
+                    "liquidity_sources": ["blockchain_tvl", "daily_volume", "cross_chain_transfers"],
+                    "source_distribution": {
+                        "blockchain_tvl": {"volume": tvl_usd, "percentage": 100},
+                        "daily_volume": {"volume": daily_volume_usd, "percentage": 100}
+                    },
+                    "primary_source": "blockchain_tvl",
+                    "total_liquidity_volume": tvl_usd,
+                    "onchain_metrics": {
+                        "tvl_usd": tvl_usd,
+                        "daily_volume_usd": daily_volume_usd,
+                        "data_source": source
+                    }
+                }
+                
+                # Track onchain vs offchain comparison
+                if "onchain" not in sourcing_analysis["onchain_offchain_comparison"]:
+                    sourcing_analysis["onchain_offchain_comparison"]["onchain"] = {
+                        "providers": [],
+                        "total_tvl": 0,
+                        "total_daily_volume": 0
+                    }
+                
+                sourcing_analysis["onchain_offchain_comparison"]["onchain"]["providers"].append(provider_name)
+                sourcing_analysis["onchain_offchain_comparison"]["onchain"]["total_tvl"] += tvl_usd
+                sourcing_analysis["onchain_offchain_comparison"]["onchain"]["total_daily_volume"] += daily_volume_usd
+        
+        # Process regional patterns
         for region, data in sourcing_analysis["regional_patterns"].items():
             data["common_sources"] = list(data["common_sources"])
             data["market_count"] = len(data["markets"])
             data["avg_volume_per_market"] = data["total_volume"] / data["market_count"] if data["market_count"] > 0 else 0
         
-        logger.info(f"Completed liquidity sourcing analysis for {len(sourcing_analysis['findings'])} markets")
+        # Calculate offchain totals for comparison
+        offchain_providers = [p for p in providers if p.get("type") == "offchain"]
+        if offchain_providers:
+            total_offchain_volume = sum(
+                sum(provider.get("metrics", {}).get("liquidity_volumes", {}).values())
+                for provider in offchain_providers
+            )
+            sourcing_analysis["onchain_offchain_comparison"]["offchain"] = {
+                "providers": [p.get("name") for p in offchain_providers],
+                "total_volume": total_offchain_volume
+            }
+        
+        logger.info(f"Completed liquidity sourcing analysis for {len(sourcing_analysis['findings'])} providers")
         return sourcing_analysis
     
     def analyze_liquidity_efficiency(self, market_data: Dict) -> Dict:
@@ -181,49 +295,95 @@ class AfricanLiquidityResearchFramework:
         - Float turnover and velocity metrics
         - Agent network health and friction points
         - Regional efficiency disparities
+        - Onchain efficiency metrics (if available)
         """
         logger.info("Analyzing liquidity efficiency across African markets")
         
         efficiency_analysis = {
             "research_question": "How efficiently is this liquidity used?",
             "analysis_timestamp": self.research_timestamp.isoformat(),
-            "methodology": "Multi-dimensional efficiency measurement with regional comparison",
+            "methodology": "Multi-dimensional efficiency measurement with regional comparison and onchain integration",
             "market_efficiency": {},
             "regional_comparison": {},
-            "efficiency_insights": {}
+            "efficiency_insights": {},
+            "onchain_efficiency": {}
         }
         
-        for market_key, market_data in market_data.items():
-            market_name = market_data.get("market_name", market_key)
-            region = market_data.get("region", "Unknown")
+        providers = self._get_providers_data(market_data)
+        
+        for provider in providers:
+            provider_name = provider.get("name", "Unknown")
+            provider_type = provider.get("type", "unknown")
+            metrics = provider.get("metrics", {})
             
-            transaction_metrics = market_data.get("transaction_metrics", {})
-            float_metrics = market_data.get("float_metrics", {})
-            agent_network_metrics = market_data.get("agent_network_metrics", {})
-            
-            if transaction_metrics and float_metrics and agent_network_metrics:
-                efficiency_metrics = self._calculate_efficiency_metrics(
-                    transaction_metrics, float_metrics, agent_network_metrics
-                )
+            if provider_type == "offchain":
+                # Traditional efficiency analysis
+                market_name = metrics.get("market_name", provider_name)
+                region = metrics.get("region", "Unknown")
                 
-                efficiency_analysis["market_efficiency"][market_key] = {
-                    "market_name": market_name,
-                    "region": region,
-                    "efficiency_metrics": efficiency_metrics,
-                    "efficiency_score": self._calculate_overall_efficiency_score(efficiency_metrics),
-                    "friction_analysis": self._analyze_agent_frictions(agent_network_metrics)
+                transaction_metrics = metrics.get("transaction_metrics", {})
+                float_metrics = metrics.get("float_metrics", {})
+                agent_network_metrics = metrics.get("agent_network_metrics", {})
+                
+                if transaction_metrics and float_metrics and agent_network_metrics:
+                    efficiency_metrics = self._calculate_efficiency_metrics(
+                        transaction_metrics, float_metrics, agent_network_metrics
+                    )
+                    
+                    efficiency_analysis["market_efficiency"][provider_name] = {
+                        "provider_type": provider_type,
+                        "market_name": market_name,
+                        "region": region,
+                        "efficiency_metrics": efficiency_metrics,
+                        "efficiency_score": self._calculate_overall_efficiency_score(efficiency_metrics),
+                        "friction_analysis": self._analyze_agent_frictions(agent_network_metrics)
+                    }
+            
+            elif provider_type == "onchain":
+                # Onchain efficiency analysis
+                tvl_usd = metrics.get("tvl_usd", 0)
+                daily_volume_usd = metrics.get("daily_volume_usd", 0)
+                apy_avg = metrics.get("apy_avg", 0)
+                cross_chain_transfers = metrics.get("cross_chain_transfers", 0)
+                
+                # Calculate onchain efficiency metrics
+                onchain_efficiency_metrics = {
+                    "tvl_efficiency": tvl_usd / 1000000,  # Convert to millions for readability
+                    "volume_efficiency": daily_volume_usd / 1000000,
+                    "yield_efficiency": apy_avg,
+                    "cross_chain_efficiency": cross_chain_transfers / 1000  # Convert to thousands
+                }
+                
+                efficiency_analysis["onchain_efficiency"][provider_name] = {
+                    "provider_type": provider_type,
+                    "market_name": provider_name,
+                    "region": "Blockchain Network",
+                    "efficiency_metrics": onchain_efficiency_metrics,
+                    "efficiency_score": self._calculate_onchain_efficiency_score(onchain_efficiency_metrics),
+                    "blockchain_metrics": metrics.get("blockchain_metrics", {}),
+                    "defi_integration": metrics.get("defi_integration", {}),
+                    "cross_chain_efficiency": metrics.get("cross_chain_efficiency", {}),
+                    "smart_contract_performance": metrics.get("smart_contract_performance", {})
                 }
         
-        efficiency_analysis["regional_comparison"] = self._compare_regional_efficiency(
-            efficiency_analysis["market_efficiency"]
-        )
+        # Process traditional efficiency analysis
+        if efficiency_analysis["market_efficiency"]:
+            efficiency_analysis["regional_comparison"] = self._compare_regional_efficiency(
+                efficiency_analysis["market_efficiency"]
+            )
+            
+            efficiency_analysis["efficiency_insights"] = self._generate_efficiency_insights(
+                efficiency_analysis["market_efficiency"],
+                efficiency_analysis["regional_comparison"]
+            )
         
-        efficiency_analysis["efficiency_insights"] = self._generate_efficiency_insights(
-            efficiency_analysis["market_efficiency"],
-            efficiency_analysis["regional_comparison"]
-        )
+        # Process onchain efficiency analysis
+        if efficiency_analysis["onchain_efficiency"]:
+            efficiency_analysis["onchain_insights"] = self._generate_onchain_efficiency_insights(
+                efficiency_analysis["onchain_efficiency"]
+            )
         
-        logger.info(f"Completed efficiency analysis for {len(efficiency_analysis['market_efficiency'])} markets")
+        logger.info(f"Completed efficiency analysis for {len(efficiency_analysis['market_efficiency'])} offchain and {len(efficiency_analysis['onchain_efficiency'])} onchain providers")
         return efficiency_analysis
     
     def analyze_onchain_liquidity_sources(self, market_data: Dict) -> Dict:
@@ -249,42 +409,46 @@ class AfricanLiquidityResearchFramework:
             "onchain_insights": {}
         }
         
-        for market_key, market_data in market_data.items():
-            market_name = market_data.get("market_name", market_key)
-            region = market_data.get("region", "Unknown")
+        providers = self._get_providers_data(market_data)
+        
+        for provider in providers:
+            provider_name = provider.get("name", "Unknown")
+            provider_type = provider.get("type", "unknown")
+            metrics = provider.get("metrics", {})
             
-            # Analyze blockchain metrics if available
-            blockchain_metrics = market_data.get("blockchain_metrics", {})
-            defi_integration = market_data.get("defi_integration", {})
-            
-            if blockchain_metrics:
-                onchain_analysis["blockchain_networks"][market_key] = self._analyze_blockchain_metrics(
-                    market_name, region, blockchain_metrics
-                )
-            
-            if defi_integration:
-                onchain_analysis["defi_protocols"][market_key] = self._analyze_defi_integration(
-                    market_name, region, defi_integration
-                )
-            
-            # Analyze cross-chain efficiency
-            cross_chain_data = market_data.get("cross_chain_efficiency", {})
-            if cross_chain_data:
-                onchain_analysis["cross_chain_efficiency"][market_key] = self._analyze_cross_chain_efficiency(
-                    market_name, region, cross_chain_data
-                )
-            
-            # Analyze smart contract performance
-            smart_contract_data = market_data.get("smart_contract_performance", {})
-            if smart_contract_data:
-                onchain_analysis["smart_contract_performance"][market_key] = self._analyze_smart_contract_performance(
-                    market_name, region, smart_contract_data
-                )
+            if provider_type == "onchain":
+                # Analyze blockchain metrics if available
+                blockchain_metrics = metrics.get("blockchain_metrics", {})
+                defi_integration = metrics.get("defi_integration", {})
+                
+                if blockchain_metrics:
+                    onchain_analysis["blockchain_networks"][provider_name] = self._analyze_blockchain_metrics(
+                        provider_name, "Blockchain Network", blockchain_metrics
+                    )
+                
+                if defi_integration:
+                    onchain_analysis["defi_protocols"][provider_name] = self._analyze_defi_integration(
+                        provider_name, "Blockchain Network", defi_integration
+                    )
+                
+                # Analyze cross-chain efficiency
+                cross_chain_data = metrics.get("cross_chain_efficiency", {})
+                if cross_chain_data:
+                    onchain_analysis["cross_chain_efficiency"][provider_name] = self._analyze_cross_chain_efficiency(
+                        provider_name, "Blockchain Network", cross_chain_data
+                    )
+                
+                # Analyze smart contract performance
+                smart_contract_data = metrics.get("smart_contract_performance", {})
+                if smart_contract_data:
+                    onchain_analysis["smart_contract_performance"][provider_name] = self._analyze_smart_contract_performance(
+                        provider_name, "Blockchain Network", smart_contract_data
+                    )
         
         # Generate onchain insights
         onchain_analysis["onchain_insights"] = self._generate_onchain_insights(onchain_analysis)
         
-        logger.info(f"Completed onchain analysis for {len(onchain_analysis['blockchain_networks'])} markets")
+        logger.info(f"Completed onchain analysis for {len(onchain_analysis['blockchain_networks'])} onchain providers")
         return onchain_analysis
     
     def _calculate_efficiency_metrics(self, transaction_metrics: Dict, float_metrics: Dict, agent_network_metrics: Dict) -> Dict:
@@ -675,17 +839,20 @@ class AfricanLiquidityResearchFramework:
                 "title": "African Liquidity Markets: Sourcing Patterns and Efficiency Analysis",
                 "research_questions": [
                     "Where can and do African payment orchestration companies source liquidity?",
-                    "How efficiently is this liquidity used?"
+                    "How efficiently is this liquidity used?",
+                    "How does onchain data integration enhance liquidity analysis?"
                 ],
                 "methodology_version": self.methodology_version,
                 "analysis_timestamp": self.research_timestamp.isoformat(),
-                "markets_analyzed": len(market_data)
+                "providers_analyzed": len(self._get_providers_data(market_data)),
+                "data_structure": "New providers array with offchain/onchain classification"
             },
             "methodology": {
-                "liquidity_sourcing_methodology": "Source identification and volume analysis by market and region",
-                "efficiency_measurement_methodology": "Multi-dimensional efficiency measurement with regional comparison",
-                "data_requirements": "Market data with transaction metrics, float metrics, agent network metrics, and liquidity sourcing information",
-                "analysis_framework": "Regional comparison with efficiency scoring and friction point identification"
+                "liquidity_sourcing_methodology": "Source identification and volume analysis by provider type (offchain/onchain) and region",
+                "efficiency_measurement_methodology": "Multi-dimensional efficiency measurement with regional comparison and onchain integration",
+                "onchain_integration_methodology": "Blockchain metrics, DeFi protocols, cross-chain efficiency, and smart contract performance analysis",
+                "data_requirements": "Provider data with type classification (offchain/onchain), traditional metrics, and blockchain metrics",
+                "analysis_framework": "Hybrid analysis combining traditional and blockchain efficiency scoring with cross-chain optimization"
             },
             "findings": {
                 "liquidity_sourcing": liquidity_sourcing_analysis,
@@ -749,6 +916,64 @@ class AfricanLiquidityResearchFramework:
             conclusions.extend(onchain_analysis["onchain_insights"]["smart_contract_optimization"])
         
         return conclusions
+
+    def _calculate_onchain_efficiency_score(self, onchain_metrics: Dict) -> float:
+        """Calculate overall efficiency score for onchain providers."""
+        try:
+            # Weighted scoring based on onchain metrics
+            tvl_score = min(onchain_metrics.get("tvl_efficiency", 0) / 100, 1.0) * 25  # Max 25 points
+            volume_score = min(onchain_metrics.get("volume_efficiency", 0) / 10, 1.0) * 25  # Max 25 points
+            yield_score = min(onchain_metrics.get("yield_efficiency", 0) / 15, 1.0) * 25  # Max 25 points
+            cross_chain_score = min(onchain_metrics.get("cross_chain_efficiency", 0) / 100, 1.0) * 25  # Max 25 points
+            
+            total_score = tvl_score + volume_score + yield_score + cross_chain_score
+            return round(total_score, 2)
+        except Exception as e:
+            logger.error(f"Error calculating onchain efficiency score: {e}")
+            return 0.0
+    
+    def _generate_onchain_efficiency_insights(self, onchain_efficiency: Dict) -> Dict:
+        """Generate insights from onchain efficiency analysis."""
+        insights = {
+            "key_findings": [],
+            "blockchain_advantages": [],
+            "defi_opportunities": [],
+            "cross_chain_benefits": []
+        }
+        
+        if not onchain_efficiency:
+            return insights
+        
+        # Analyze TVL efficiency
+        total_tvl = sum(provider["efficiency_metrics"]["tvl_efficiency"] for provider in onchain_efficiency.values())
+        avg_tvl = total_tvl / len(onchain_efficiency) if onchain_efficiency else 0
+        
+        insights["key_findings"].append({
+            "finding": "Onchain providers show significant TVL efficiency",
+            "evidence": f"${total_tvl:.2f}M total TVL across {len(onchain_efficiency)} providers",
+            "implication": "High liquidity utilization in blockchain networks"
+        })
+        
+        # Analyze yield efficiency
+        total_yield = sum(provider["efficiency_metrics"]["yield_efficiency"] for provider in onchain_efficiency.values())
+        avg_yield = total_yield / len(onchain_efficiency) if onchain_efficiency else 0
+        
+        insights["defi_opportunities"].append({
+            "opportunity": "High yield opportunities in DeFi protocols",
+            "evidence": f"Average APY: {avg_yield:.2f}% across onchain providers",
+            "implication": "Significant yield farming potential for liquidity providers"
+        })
+        
+        # Analyze cross-chain efficiency
+        total_cross_chain = sum(provider["efficiency_metrics"]["cross_chain_efficiency"] for provider in onchain_efficiency.values())
+        
+        insights["cross_chain_benefits"].append({
+            "benefit": "Efficient cross-chain liquidity movement",
+            "evidence": f"{total_cross_chain:.0f}K daily cross-chain transfers",
+            "implication": "Seamless liquidity flow across blockchain networks"
+        })
+        
+        return insights
 
 if __name__ == "__main__":
     print("🔬 LAVA RESEARCH METHODOLOGY: African Liquidity Analysis Framework")
