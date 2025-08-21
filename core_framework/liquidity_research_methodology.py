@@ -4,6 +4,7 @@ LAVA Research Methodology: African Liquidity Analysis Framework
 This framework provides the methodology for investigating:
 1. Where African payment orchestration companies source liquidity
 2. How efficiently this liquidity is used
+3. How onchain data integration enhances liquidity analysis
 
 The framework is designed to analyze real market data and generate research findings.
 """
@@ -28,17 +29,26 @@ class AfricanLiquidityResearchFramework:
     2. Efficiency measurement and comparison methodologies
     3. Regional disparity analysis
     4. Agent network health assessment
+    5. Onchain data integration and blockchain efficiency analysis
     """
     
     def __init__(self):
         self.research_timestamp = datetime.now()
-        self.methodology_version = "1.0"
+        self.methodology_version = "2.0"  # Updated for onchain integration
         
-        logger.info(f"Initialized African Liquidity Research Framework v{self.methodology_version}")
+        # Initialize onchain data sources
+        self.onchain_sources = {
+            "blockchain_networks": ["Celo", "Stellar", "Ethereum", "Polygon"],
+            "defi_protocols": ["Uniswap", "Aave", "Compound", "MakerDAO"],
+            "african_defi": ["Mara", "Yellow Card", "BitPesa", "Paxful"],
+            "analytics_platforms": ["Dune Analytics", "The Graph", "Etherscan", "Celo Explorer"]
+        }
+        
+        logger.info(f"Initialized African Liquidity Research Framework v{self.methodology_version} with onchain integration")
     
     def load_market_data(self, data_source: Union[str, pd.DataFrame, Dict]) -> Dict:
-        """Load market data from various sources."""
-        logger.info("Loading market data for analysis")
+        """Load market data from various sources including onchain data."""
+        logger.info("Loading market data for analysis (including onchain sources)")
         
         if isinstance(data_source, str):
             if data_source.endswith('.csv'):
@@ -66,7 +76,8 @@ class AfricanLiquidityResearchFramework:
         required_fields = {
             "basic": ["market_name", "country", "region"],
             "liquidity_sourcing": ["liquidity_sources", "liquidity_volumes"],
-            "efficiency": ["transaction_metrics", "float_metrics", "agent_network_metrics"]
+            "efficiency": ["transaction_metrics", "float_metrics", "agent_network_metrics"],
+            "onchain": ["blockchain_metrics", "defi_integration", "cross_chain_efficiency"]
         }
         
         for market_key, market_data in data.items():
@@ -87,6 +98,12 @@ class AfricanLiquidityResearchFramework:
                 logger.warning(f"Missing float_metrics for market {market_key}")
             if "agent_network_metrics" not in market_data:
                 logger.warning(f"Missing agent_network_metrics for market {market_key}")
+            
+            # Check for onchain data (optional but recommended)
+            if "blockchain_metrics" not in market_data:
+                logger.info(f"No blockchain metrics for market {market_key} - will use traditional analysis")
+            if "defi_integration" not in market_data:
+                logger.info(f"No DeFi integration data for market {market_key} - will use traditional analysis")
     
     def analyze_liquidity_sourcing(self, market_data: Dict) -> Dict:
         """
@@ -208,6 +225,67 @@ class AfricanLiquidityResearchFramework:
         
         logger.info(f"Completed efficiency analysis for {len(efficiency_analysis['market_efficiency'])} markets")
         return efficiency_analysis
+    
+    def analyze_onchain_liquidity_sources(self, market_data: Dict) -> Dict:
+        """
+        NEW: Analyze onchain liquidity sources and blockchain integration.
+        
+        Identifies:
+        - Blockchain network adoption and transaction volumes
+        - DeFi protocol integration and liquidity pools
+        - Cross-chain bridge efficiency and costs
+        - Smart contract performance and gas optimization
+        """
+        logger.info("Analyzing onchain liquidity sources and blockchain integration")
+        
+        onchain_analysis = {
+            "research_question": "How do onchain data sources enhance liquidity analysis?",
+            "analysis_timestamp": self.research_timestamp.isoformat(),
+            "methodology": "Blockchain metrics, DeFi integration, and cross-chain efficiency analysis",
+            "blockchain_networks": {},
+            "defi_protocols": {},
+            "cross_chain_efficiency": {},
+            "smart_contract_performance": {},
+            "onchain_insights": {}
+        }
+        
+        for market_key, market_data in market_data.items():
+            market_name = market_data.get("market_name", market_key)
+            region = market_data.get("region", "Unknown")
+            
+            # Analyze blockchain metrics if available
+            blockchain_metrics = market_data.get("blockchain_metrics", {})
+            defi_integration = market_data.get("defi_integration", {})
+            
+            if blockchain_metrics:
+                onchain_analysis["blockchain_networks"][market_key] = self._analyze_blockchain_metrics(
+                    market_name, region, blockchain_metrics
+                )
+            
+            if defi_integration:
+                onchain_analysis["defi_protocols"][market_key] = self._analyze_defi_integration(
+                    market_name, region, defi_integration
+                )
+            
+            # Analyze cross-chain efficiency
+            cross_chain_data = market_data.get("cross_chain_efficiency", {})
+            if cross_chain_data:
+                onchain_analysis["cross_chain_efficiency"][market_key] = self._analyze_cross_chain_efficiency(
+                    market_name, region, cross_chain_data
+                )
+            
+            # Analyze smart contract performance
+            smart_contract_data = market_data.get("smart_contract_performance", {})
+            if smart_contract_data:
+                onchain_analysis["smart_contract_performance"][market_key] = self._analyze_smart_contract_performance(
+                    market_name, region, smart_contract_data
+                )
+        
+        # Generate onchain insights
+        onchain_analysis["onchain_insights"] = self._generate_onchain_insights(onchain_analysis)
+        
+        logger.info(f"Completed onchain analysis for {len(onchain_analysis['blockchain_networks'])} markets")
+        return onchain_analysis
     
     def _calculate_efficiency_metrics(self, transaction_metrics: Dict, float_metrics: Dict, agent_network_metrics: Dict) -> Dict:
         """Calculate comprehensive efficiency metrics from raw data."""
@@ -436,6 +514,150 @@ class AfricanLiquidityResearchFramework:
         
         return insights
     
+    def _analyze_blockchain_metrics(self, market_name: str, region: str, blockchain_metrics: Dict) -> Dict:
+        """Analyze blockchain network metrics for a specific market."""
+        return {
+            "market_name": market_name,
+            "region": region,
+            "network_adoption": {
+                "celo_transactions": blockchain_metrics.get("celo_daily_tx", 0),
+                "stellar_transactions": blockchain_metrics.get("stellar_daily_tx", 0),
+                "ethereum_transactions": blockchain_metrics.get("ethereum_daily_tx", 0),
+                "polygon_transactions": blockchain_metrics.get("polygon_daily_tx", 0)
+            },
+            "transaction_efficiency": {
+                "avg_gas_fee": blockchain_metrics.get("avg_gas_fee_usd", 0),
+                "tx_confirmation_time": blockchain_metrics.get("avg_confirmation_time_seconds", 0),
+                "throughput_tps": blockchain_metrics.get("transactions_per_second", 0)
+            },
+            "liquidity_metrics": {
+                "total_value_locked": blockchain_metrics.get("tvl_usd", 0),
+                "daily_volume": blockchain_metrics.get("daily_volume_usd", 0),
+                "active_addresses": blockchain_metrics.get("active_addresses", 0)
+            }
+        }
+    
+    def _analyze_defi_integration(self, market_name: str, region: str, defi_integration: Dict) -> Dict:
+        """Analyze DeFi protocol integration for a specific market."""
+        return {
+            "market_name": market_name,
+            "region": region,
+            "protocol_adoption": {
+                "uniswap_liquidity": defi_integration.get("uniswap_liquidity_usd", 0),
+                "aave_deposits": defi_integration.get("aave_deposits_usd", 0),
+                "compound_borrowing": defi_integration.get("compound_borrowing_usd", 0),
+                "makerdao_collateral": defi_integration.get("makerdao_collateral_usd", 0)
+            },
+            "yield_metrics": {
+                "avg_apy": defi_integration.get("average_apy_percentage", 0),
+                "liquidity_mining_rewards": defi_integration.get("liquidity_mining_usd", 0),
+                "governance_token_holdings": defi_integration.get("governance_tokens", 0)
+            },
+            "risk_metrics": {
+                "impermanent_loss_risk": defi_integration.get("impermanent_loss_risk_score", 0),
+                "smart_contract_risk": defi_integration.get("smart_contract_risk_score", 0),
+                "liquidity_depth": defi_integration.get("liquidity_depth_score", 0)
+            }
+        }
+    
+    def _analyze_cross_chain_efficiency(self, market_name: str, region: str, cross_chain_data: Dict) -> Dict:
+        """Analyze cross-chain bridge efficiency and costs."""
+        return {
+            "market_name": market_name,
+            "region": region,
+            "bridge_efficiency": {
+                "celo_stellar_bridge": {
+                    "transfer_time": cross_chain_data.get("celo_stellar_time_seconds", 0),
+                    "transfer_cost": cross_chain_data.get("celo_stellar_cost_usd", 0),
+                    "success_rate": cross_chain_data.get("celo_stellar_success_rate", 0)
+                },
+                "ethereum_polygon_bridge": {
+                    "transfer_time": cross_chain_data.get("eth_polygon_time_seconds", 0),
+                    "transfer_cost": cross_chain_data.get("eth_polygon_cost_usd", 0),
+                    "success_rate": cross_chain_data.get("eth_polygon_success_rate", 0)
+                }
+            },
+            "cross_chain_volume": {
+                "daily_bridge_volume": cross_chain_data.get("daily_bridge_volume_usd", 0),
+                "monthly_bridge_volume": cross_chain_data.get("monthly_bridge_volume_usd", 0),
+                "bridge_fee_revenue": cross_chain_data.get("bridge_fee_revenue_usd", 0)
+            }
+        }
+    
+    def _analyze_smart_contract_performance(self, market_name: str, region: str, smart_contract_data: Dict) -> Dict:
+        """Analyze smart contract performance and gas optimization."""
+        return {
+            "market_name": market_name,
+            "region": region,
+            "gas_efficiency": {
+                "avg_gas_used": smart_contract_data.get("average_gas_used", 0),
+                "gas_optimization_score": smart_contract_data.get("gas_optimization_score", 0),
+                "cost_per_transaction": smart_contract_data.get("cost_per_transaction_usd", 0)
+            },
+            "contract_performance": {
+                "execution_success_rate": smart_contract_data.get("execution_success_rate", 0),
+                "average_execution_time": smart_contract_data.get("avg_execution_time_ms", 0),
+                "contract_complexity_score": smart_contract_data.get("complexity_score", 0)
+            },
+            "security_metrics": {
+                "audit_score": smart_contract_data.get("audit_score", 0),
+                "bug_bounty_program": smart_contract_data.get("bug_bounty_active", False),
+                "insurance_coverage": smart_contract_data.get("insurance_coverage_usd", 0)
+            }
+        }
+    
+    def _generate_onchain_insights(self, onchain_analysis: Dict) -> Dict:
+        """Generate insights from onchain data analysis."""
+        insights = {
+            "blockchain_adoption_trends": [],
+            "defi_integration_opportunities": [],
+            "cross_chain_efficiency_gains": [],
+            "smart_contract_optimization": []
+        }
+        
+        # Analyze blockchain adoption trends
+        if onchain_analysis["blockchain_networks"]:
+            total_tvl = sum([
+                market["liquidity_metrics"]["total_value_locked"] 
+                for market in onchain_analysis["blockchain_networks"].values()
+            ])
+            
+            insights["blockchain_adoption_trends"].append({
+                "trend": "Total Value Locked across blockchain networks",
+                "evidence": f"${total_tvl:,.0f} TVL across {len(onchain_analysis['blockchain_networks'])} markets",
+                "implication": "Significant blockchain adoption in African markets"
+            })
+        
+        # Analyze DeFi integration opportunities
+        if onchain_analysis["defi_protocols"]:
+            avg_apy = np.mean([
+                market["yield_metrics"]["avg_apy"] 
+                for market in onchain_analysis["defi_protocols"].values()
+                if market["yield_metrics"]["avg_apy"] > 0
+            ])
+            
+            if avg_apy > 0:
+                insights["defi_integration_opportunities"].append({
+                    "opportunity": "High yield opportunities in DeFi protocols",
+                    "evidence": f"Average APY: {avg_apy:.2f}% across DeFi protocols",
+                    "implication": "Significant yield farming potential for liquidity providers"
+                })
+        
+        # Analyze cross-chain efficiency gains
+        if onchain_analysis["cross_chain_efficiency"]:
+            total_bridge_volume = sum([
+                market["cross_chain_volume"]["daily_bridge_volume"] 
+                for market in onchain_analysis["cross_chain_efficiency"].values()
+            ])
+            
+            insights["cross_chain_efficiency_gains"].append({
+                "gain": "Cross-chain liquidity movement",
+                "evidence": f"${total_bridge_volume:,.0f} daily bridge volume",
+                "implication": "Efficient cross-chain liquidity management"
+            })
+        
+        return insights
+    
     def generate_research_report(self, market_data: Dict, output_file: str = None) -> Dict:
         """
         Generate comprehensive research report addressing both LAVA research questions.
@@ -446,6 +668,7 @@ class AfricanLiquidityResearchFramework:
         
         liquidity_sourcing_analysis = self.analyze_liquidity_sourcing(market_data)
         efficiency_analysis = self.analyze_liquidity_efficiency(market_data)
+        onchain_analysis = self.analyze_onchain_liquidity_sources(market_data)
         
         research_report = {
             "research_metadata": {
@@ -466,11 +689,13 @@ class AfricanLiquidityResearchFramework:
             },
             "findings": {
                 "liquidity_sourcing": liquidity_sourcing_analysis,
-                "efficiency_analysis": efficiency_analysis
+                "efficiency_analysis": efficiency_analysis,
+                "onchain_analysis": onchain_analysis
             },
             "conclusions": {
                 "liquidity_sourcing_conclusions": self._generate_sourcing_conclusions(liquidity_sourcing_analysis),
-                "efficiency_conclusions": self._generate_efficiency_conclusions(efficiency_analysis)
+                "efficiency_conclusions": self._generate_efficiency_conclusions(efficiency_analysis),
+                "onchain_conclusions": self._generate_onchain_conclusions(onchain_analysis)
             }
         }
         
@@ -504,6 +729,24 @@ class AfricanLiquidityResearchFramework:
         
         if efficiency_analysis["efficiency_insights"]["regional_patterns"]:
             conclusions.extend(efficiency_analysis["efficiency_insights"]["regional_patterns"])
+        
+        return conclusions
+    
+    def _generate_onchain_conclusions(self, onchain_analysis: Dict) -> List[Dict]:
+        """Generate conclusions about onchain data integration."""
+        conclusions = []
+        
+        if onchain_analysis["onchain_insights"]["blockchain_adoption_trends"]:
+            conclusions.extend(onchain_analysis["onchain_insights"]["blockchain_adoption_trends"])
+        
+        if onchain_analysis["onchain_insights"]["defi_integration_opportunities"]:
+            conclusions.extend(onchain_analysis["onchain_insights"]["defi_integration_opportunities"])
+        
+        if onchain_analysis["onchain_insights"]["cross_chain_efficiency_gains"]:
+            conclusions.extend(onchain_analysis["onchain_insights"]["cross_chain_efficiency_gains"])
+        
+        if onchain_analysis["onchain_insights"]["smart_contract_optimization"]:
+            conclusions.extend(onchain_analysis["onchain_insights"]["smart_contract_optimization"])
         
         return conclusions
 
