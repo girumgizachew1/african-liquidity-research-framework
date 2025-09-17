@@ -27,6 +27,7 @@ ENV/
 
 # Generated Reports
 *.json
+!core_framework/sample_market_data_template.json
 *.html
 *.pdf
 

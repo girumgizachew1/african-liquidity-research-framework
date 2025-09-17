@@ -1,0 +1,138 @@
+{
+  "providers": [
+    {
+      "name": "M-Pesa Kenya",
+      "type": "offchain",
+      "metrics": {
+        "market_name": "M-Pesa Kenya",
+        "country": "Kenya",
+        "region": "East Africa",
+        "liquidity_sources": ["banks", "agents", "merchants", "customers"],
+        "transaction_metrics": {
+          "attempted": 32244897960,
+          "successful": 31600000000,
+          "failed": 644897959
+        },
+        "float_metrics": {
+          "total_volume": 309597600000,
+          "average_float": 4643964000
+        },
+        "agent_network_metrics": {
+          "total": 262016,
+          "active": 235814,
+          "with_liquidity": 209632,
+          "with_cash": 183450
+        },
+        "merchant_metrics": {
+          "total_merchants": 633009,
+          "active_merchants": 633009,
+          "pochi_tills": 632681,
+          "overdraft_customers": 44797
+        },
+        "customer_metrics": {
+          "active_customers": 32410000,
+          "arpu_usd": 361.32,
+          "transactions_per_customer": 31.51,
+          "timiza_customers": 111113,
+          "visa_card_customers": 143383,
+          "mali_customers": 119344
+        }
+      }
+    },
+    {
+      "name": "M-Pesa Ethiopia",
+      "type": "offchain",
+      "metrics": {
+        "market_name": "M-Pesa Ethiopia",
+        "country": "Ethiopia",
+        "region": "East Africa",
+        "liquidity_sources": ["banks", "agents", "merchants", "customers"],
+        "transaction_metrics": {
+          "attempted": 33000000,
+          "successful": 31480000,
+          "failed": 1520000
+        },
+        "float_metrics": {
+          "total_volume": 1897833288,
+          "average_float": 94891664
+        },
+        "agent_network_metrics": {
+          "total": 25760,
+          "active": 23184,
+          "with_liquidity": 20608,
+          "with_cash": 18032
+        },
+        "merchant_metrics": {
+          "total_merchants": 62700,
+          "active_merchants": 56430,
+          "pochi_tills": 0,
+          "overdraft_customers": 0
+        },
+        "customer_metrics": {
+          "active_customers": 4510000,
+          "arpu_usd": 420.85,
+          "transactions_per_customer": 6.98,
+          "timiza_customers": 0,
+          "visa_card_customers": 0,
+          "mali_customers": 0
+        }
+      }
+    },
+
+    
+    {
+      "name": "Celo Network",
+      "type": "onchain",
+      "metrics": {
+        "tvl_usd": 75000000,
+        "daily_volume_usd": 9850000,
+        "apy_avg": 8.5,
+        "cross_chain_transfers": 5000,
+        "source": "DeFiLlama, Celo.org, Coingecko",
+        "blockchain_metrics": {
+          "celo_daily_tx": 1000000,
+          "avg_gas_fee_usd": 0.01,
+          "avg_confirmation_time_seconds": 5,
+          "transactions_per_second": 12,
+          "tvl_usd": 75000000,
+          "daily_volume_usd": 16000000,
+          "active_addresses": 650000
+        },
+        "defi_integration": {
+          "uniswap_liquidity_usd": 730000,
+          "aave_deposits_usd": 5000000,
+          "compound_borrowing_usd": 3000000,
+          "makerdao_collateral_usd": 580000000,
+          "average_apy_percentage": 8.5,
+          "liquidity_mining_usd": 730000,
+          "governance_tokens": 500000,
+          "impermanent_loss_risk_score": 0.3,
+          "smart_contract_risk_score": 0.2,
+          "liquidity_depth_score": 0.8
+        },
+        "cross_chain_efficiency": {
+          "celo_stellar_time_seconds": 35,
+          "celo_stellar_cost_usd": 0.12,
+          "celo_stellar_success_rate": 98,
+          "eth_polygon_time_seconds": 27,
+          "eth_polygon_cost_usd": 0.09,
+          "eth_polygon_success_rate": 99,
+          "daily_bridge_volume_usd": 4500000,
+          "monthly_bridge_volume_usd": 135000000,
+          "bridge_fee_revenue_usd": 120000
+        },
+        "smart_contract_performance": {
+            "average_gas_used": 35000,
+            "gas_optimization_score": 7.8,
+            "cost_per_transaction_usd": 0.04,
+            "execution_success_rate": 99.5,
+            "avg_execution_time_ms": 1200,
+            "complexity_score": 6.5,
+            "audit_score": 8.7,
+            "bug_bounty_active": true,
+            "insurance_coverage_usd": 1500000
+          }
+      }
+    }
+  ]
+}
