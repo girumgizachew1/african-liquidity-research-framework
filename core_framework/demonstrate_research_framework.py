@@ -30,16 +30,29 @@ def calculate_liquidity_efficiency():
     efficiency_analysis = framework.analyze_liquidity_efficiency(market_data)
     
     # Display results
-    print("\n📈 EFFICIENCY RESULTS")
+    print("\n📈 KEY METRICS")
     print("=" * 50)
     
-    # Traditional efficiency
+    # Traditional efficiency with key metrics only
     if efficiency_analysis.get("market_efficiency"):
         print("\n📊 TRADITIONAL MARKETS:")
         for provider_name, data in efficiency_analysis["market_efficiency"].items():
+            metrics = data["efficiency_metrics"]
             score = data["efficiency_score"]["overall_score"]
             grade = data["efficiency_score"]["grade"]
-            print(f"   {data['market_name']} ({data['region']}): {score:.1f}/100 ({grade})")
+            
+            print(f"\n   {data['market_name']} ({data['region']}): {score:.1f}/100 ({grade})")
+            
+            # Key metrics only
+            tx_metrics = metrics["transaction_efficiency"]
+            float_metrics = metrics["float_efficiency"]
+            agent_metrics = metrics["agent_network_efficiency"]
+            
+            print(f"      Success Rate: {tx_metrics['success_rate']:.2f}%")
+            print(f"      Float Turnover: {float_metrics['turnover']:.2f}x")
+            print(f"      Agent Utilization: {agent_metrics['utilization_rate']:.2f}%")
+            print(f"      Liquidity Coverage: {agent_metrics['liquidity_coverage']:.2f}%")
+            print(f"      Cash Coverage: {agent_metrics['cash_coverage']:.2f}%")
     
     # Onchain efficiency
     if efficiency_analysis.get("onchain_efficiency"):
@@ -56,7 +69,7 @@ def calculate_liquidity_efficiency():
                 avg_score = data["average_metrics"]["efficiency_score"]
                 print(f"   {region}: {avg_score:.1f}/100 ({data['market_count']} markets)")
     
-    print("\n✅ Efficiency calculation complete!")
+    print("\n✅ Key metrics calculation complete!")
     return efficiency_analysis
 
 if __name__ == "__main__":
